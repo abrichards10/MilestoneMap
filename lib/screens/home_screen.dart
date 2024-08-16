@@ -1,5 +1,8 @@
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:goals_app/bloc/circle_bloc.dart';
+import 'package:goals_app/bloc/circle_state.dart';
 import 'package:provider/provider.dart';
 import '../models/circle.dart';
 import '../painters/circle_painters.dart';
@@ -7,6 +10,8 @@ import '../providers/circle_provider.dart';
 import '../widgets/custom_navbar.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -49,7 +54,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   circleProvider.addCircle(parent, newCircle);
                   Navigator.of(context).pop();
                   _removeMenu();
-                  setState(() {});
                 }
               },
               child: Text('Add'),
@@ -57,7 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                setState(() {});
               },
               child: Text('Cancel'),
             ),
@@ -226,51 +229,66 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  blocListenerComponent(state, circleProvider) {
+    if ((state is CircleUpdatedState) || (state is CircleInitialState)) {
+      print("Circle updated");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final circleProvider = Provider.of<CircleProvider>(context);
 
-    return Scaffold(
-      appBar: CustomNavbar(), // Use your custom navbar here
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onScaleUpdate: (details) {
-                setState(() {
-                  _scale = details.scale;
-                  _offset = details.focalPoint - details.localFocalPoint;
-                });
-              },
-              onTapUp: (details) {
-                _handleTap(
-                    details.localPosition / _scale - _offset, circleProvider);
-              },
-              child: Transform(
-                transform: Matrix4.identity()
-                  ..translate(_offset.dx, _offset.dy)
-                  ..scale(_scale),
-                child: CustomPaint(
-                  painter: CirclePainter(circleProvider.rootCircle),
-                  size: Size.infinite,
+    return BlocListener<CircleBloc, CircleState>(
+      listener: (context, state) {
+        blocListenerComponent(state, circleProvider);
+      },
+      child: BlocBuilder<CircleBloc, CircleState>(
+        builder: (context, state) {
+          return Scaffold(
+            appBar: CustomNavbar(), // Use your custom navbar here
+            body: Stack(
+              children: [
+                Positioned.fill(
+                  child: GestureDetector(
+                    onScaleUpdate: (details) {
+                      _scale = details.scale;
+                      _offset = details.focalPoint - details.localFocalPoint;
+                    },
+                    onTapUp: (details) {
+                      _handleTap(details.localPosition / _scale - _offset,
+                          circleProvider);
+                    },
+                    child: Transform(
+                      transform: Matrix4.identity()
+                        ..translate(_offset.dx, _offset.dy)
+                        ..scale(_scale),
+                      child: CustomPaint(
+                        key: ValueKey(
+                            'custom_paint_${DateTime.now().millisecondsSinceEpoch}'),
+                        painter: CirclePainter(circleProvider.rootCircle),
+                        size: Size.infinite,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      setState(() {
+                        _scale = 1.0;
+                        _offset = Offset.zero;
+                      });
+                    },
+                    child: Icon(Icons.home),
+                  ),
+                ),
+              ],
             ),
-          ),
-          Positioned(
-            bottom: 16,
-            right: 16,
-            child: FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  _scale = 1.0;
-                  _offset = Offset.zero;
-                });
-              },
-              child: Icon(Icons.home),
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
