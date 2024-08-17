@@ -1,28 +1,24 @@
 import 'package:flutter/material.dart';
 import '../models/circle.dart';
 
-class CirclePainter extends CustomPainter {
+class RootCirclePainter extends CustomPainter {
   final Circle rootCircle;
 
-  CirclePainter(this.rootCircle);
+  RootCirclePainter(this.rootCircle);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.blue
-      ..style = PaintingStyle.fill;
-
     final linePaint = Paint()
-      ..color = Colors.black
+      ..color = const Color.fromARGB(30, 0, 0, 0)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
-    drawCircle(rootCircle, canvas, linePaint);
+    drawGoalCircle(rootCircle, canvas, linePaint);
   }
 
-  void drawCircle(Circle circle, Canvas canvas, Paint linePaint) {
+  void drawGoalCircle(Circle circle, Canvas canvas, Paint linePaint) {
     final offset = circle.offset;
-    final radius = 50.0; // Adjust as needed for circle size
+    const radius = 80.0; // Adjust as needed for circle size
 
     // Draw lines to children
     for (var child in circle.children) {
@@ -32,12 +28,12 @@ class CirclePainter extends CustomPainter {
         Offset(childOffset.dx, childOffset.dy),
         linePaint,
       );
-      drawCircle(child, canvas, linePaint);
+      drawGoalCircle(child, canvas, linePaint);
     }
 
     // Draw the circle itself
     final paint = Paint()
-      ..color = Colors.blue
+      ..color = const Color.fromARGB(255, 67, 111, 70)
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(offset, radius, paint);
@@ -46,7 +42,10 @@ class CirclePainter extends CustomPainter {
     final textPainter = TextPainter(
       text: TextSpan(
         text: circle.text,
-        style: TextStyle(color: Colors.white, fontSize: 16.0),
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16.0,
+        ),
       ),
       textAlign: TextAlign.center,
       textDirection: TextDirection.ltr,
