@@ -7,6 +7,7 @@ class Circle {
   Offset offset;
   List<Circle> children = [];
   DateTime? date;
+  double size; // Add a size property to manage circle size
 
   Circle({
     required this.id,
@@ -14,5 +15,6 @@ class Circle {
     required this.isGoal,
     required this.offset,
     this.date,
+    this.size = 100, // Default size for root circle
   });
 }

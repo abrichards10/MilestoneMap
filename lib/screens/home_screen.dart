@@ -4,10 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goals_app/bloc/circle_bloc.dart';
 import 'package:goals_app/bloc/circle_state.dart';
 import 'package:goals_app/painters/task_circle_painters.dart';
+import 'package:goals_app/providers/circle_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/circle.dart';
 import '../painters/root_circle_painters.dart';
-import '../providers/circle_provider.dart';
 import '../widgets/custom_navbar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showAddDialog(Circle parent, circleProvider) {
+  void _showAddDialog(Circle parent, CircleProvider circleProvider) {
     final textController = TextEditingController();
     showDialog(
       context: context,
@@ -50,10 +50,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   final newCircle = Circle(
                     id: DateTime.now().toString(),
                     text: text,
-                    isGoal: false,
-                    offset: Offset(100, 100), // Placeholder position
+                    isGoal: false, // Task circle
+                    offset: Offset(parent.offset.dx,
+                        parent.offset.dy - 100), // Place above parent
+                    size: 50, // Smaller size for task circles
                   );
-                  // isRootCircle = false;
 
                   circleProvider.addCircle(parent, newCircle);
                   Navigator.of(context).pop();
@@ -106,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Implement move dialog or drag-and-drop logic here
   }
 
-  void _showEditDialog(Circle circle, CircleProvider circleProvider) {
+  void _showEditDialog(Circle circle, circleProvider) {
     final textController = TextEditingController(text: circle.text);
     showDialog(
       context: context,
@@ -156,8 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showMenu(
-      Circle circle, Offset position, CircleProvider circleProvider) {
+  void _showMenu(Circle circle, Offset position, circleProvider) {
     if (_overlayEntry != null) {
       _overlayEntry!.remove();
     }
@@ -206,30 +206,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return distance <= circleRadius;
   }
 
-  void searchCircle(Circle rootCircle, Circle taskCircles, Offset position) {
-    if (_selectedCircle != null) return;
-
-    if (_isPointInsideCircle(position, rootCircle)) {
-      _selectedCircle = rootCircle;
-    } else if (_isPointInsideCircle(position, taskCircles)) {
-      _selectedCircle = taskCircles;
-    } else {
-      for (var child in rootCircle.children) {
-        searchCircle(child, taskCircles, position);
-        if (_selectedCircle != null) return;
-      }
-      for (var child in taskCircles.children) {
-        searchCircle(rootCircle, child, position);
-        if (_selectedCircle != null) return;
-      }
-    }
-  }
-
-  void _handleTap(Offset position, circleProvider) {
+  void _handleTap(Offset position, CircleProvider circleProvider) {
     _selectedCircle = null; // Reset selected circle
 
-    searchCircle(
-        circleProvider.rootCircle, circleProvider.taskCircle, position);
+    searchCircle(circleProvider.rootCircle, position);
 
     if (_selectedCircle == null) {
       print("No circle found at position: $position");
@@ -240,13 +220,26 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void searchCircle(Circle rootCircle, Offset position) {
+    if (_selectedCircle != null) return;
+
+    if (_isPointInsideCircle(position, rootCircle)) {
+      _selectedCircle = rootCircle;
+    } else {
+      for (var child in rootCircle.children) {
+        searchCircle(child, position);
+        if (_selectedCircle != null) return;
+      }
+    }
+  }
+
   blocListenerComponent(state, circleProvider) {
     if ((state is CircleUpdatedState) || (state is CircleInitialState)) {
       print("Circle updated");
     }
   }
 
-  returnRootCircle(circleProvider) {
+  Widget returnRootCircle(CircleProvider circleProvider) {
     return Transform(
       transform: Matrix4.identity()
         ..translate(_offset.dx, _offset.dy)
@@ -254,19 +247,6 @@ class _HomeScreenState extends State<HomeScreen> {
       child: CustomPaint(
         key: ValueKey('custom_paint_${DateTime.now().millisecondsSinceEpoch}'),
         painter: RootCirclePainter(circleProvider.rootCircle),
-        size: Size.infinite,
-      ),
-    );
-  }
-
-  returnTaskCircle(circleProvider) {
-    return Transform(
-      transform: Matrix4.identity()
-        ..translate(_offset.dx, _offset.dy)
-        ..scale(_scale),
-      child: CustomPaint(
-        key: ValueKey('custom_paint_${DateTime.now().millisecondsSinceEpoch}'),
-        painter: TaskCirclePainter(circleProvider.taskCircle),
         size: Size.infinite,
       ),
     );
@@ -284,25 +264,8 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, state) {
           return Scaffold(
             backgroundColor: Color.fromARGB(176, 165, 255, 166),
-            // appBar: CustomNavbar(), // Use your custom navbar here
             body: Stack(
               children: [
-                Positioned.fill(
-                  child: GestureDetector(
-                      onScaleUpdate: (details) {
-                        _scale = details.scale;
-                        _offset = details.focalPoint - details.localFocalPoint;
-                      },
-                      onTapUp: (details) {
-                        _handleTap(details.localPosition / _scale - _offset,
-                            circleProvider);
-                      },
-                      child:
-                          //  isRootCircle
-                          //     ? returnRootCircle(circleProvider)
-                          //     :
-                          returnTaskCircle(circleProvider)),
-                ),
                 Positioned.fill(
                   child: GestureDetector(
                       onScaleUpdate: (details) {
