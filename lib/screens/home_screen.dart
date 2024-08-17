@@ -1,14 +1,11 @@
-// lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goals_app/bloc/circle_bloc.dart';
 import 'package:goals_app/bloc/circle_state.dart';
-import 'package:goals_app/painters/task_circle_painters.dart';
 import 'package:goals_app/providers/circle_provider.dart';
 import 'package:provider/provider.dart';
 import '../models/circle.dart';
 import '../painters/root_circle_painters.dart';
-import '../widgets/custom_navbar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   OverlayEntry? _overlayEntry;
   double _scale = 1.0;
   Offset _offset = Offset.zero;
-  // bool isRootCircle = true;
+  Offset _initialOffset = Offset.zero; // Store the initial offset
 
   void _removeMenu() {
     if (_overlayEntry != null) {
@@ -75,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showRemoveDialog(Circle circle, circleProvider) {
+  void _showRemoveDialog(Circle circle, CircleProvider circleProvider) {
     showDialog(
       context: context,
       builder: (context) {
@@ -107,7 +104,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Implement move dialog or drag-and-drop logic here
   }
 
-  void _showEditDialog(Circle circle, circleProvider) {
+  void _showEditDialog(Circle circle, CircleProvider circleProvider) {
     final textController = TextEditingController(text: circle.text);
     showDialog(
       context: context,
@@ -157,7 +154,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showMenu(Circle circle, Offset position, circleProvider) {
+  void _showMenu(
+      Circle circle, Offset position, CircleProvider circleProvider) {
     if (_overlayEntry != null) {
       _overlayEntry!.remove();
     }
@@ -201,7 +199,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   bool _isPointInsideCircle(Offset point, Circle circle) {
-    const double circleRadius = 50; // Adjust to match your circle size
+    final double circleRadius =
+        circle.size / 2; // Adjust to match your circle size
     final distance = (point - circle.offset).distance;
     return distance <= circleRadius;
   }
@@ -268,15 +267,20 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Positioned.fill(
                   child: GestureDetector(
-                      onScaleUpdate: (details) {
+                    onScaleUpdate: (details) {
+                      setState(() {
                         _scale = details.scale;
                         _offset = details.focalPoint - details.localFocalPoint;
-                      },
-                      onTapUp: (details) {
-                        _handleTap(details.localPosition / _scale - _offset,
-                            circleProvider);
-                      },
-                      child: returnRootCircle(circleProvider)),
+                      });
+                    },
+                    onTapUp: (details) {
+                      _handleTap(
+                        details.localPosition / _scale - _offset,
+                        circleProvider,
+                      );
+                    },
+                    child: returnRootCircle(circleProvider),
+                  ),
                 ),
                 Positioned(
                   bottom: 16,
@@ -285,7 +289,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () {
                       setState(() {
                         _scale = 1.0;
-                        _offset = Offset.zero;
+                        _offset =
+                            _initialOffset; // Reset to the initial position
                       });
                     },
                     child: Icon(Icons.home),
