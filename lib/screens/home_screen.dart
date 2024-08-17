@@ -19,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   OverlayEntry? _overlayEntry;
   double _scale = 1.0;
   Offset _offset = Offset.zero;
+  Offset _panOffset = Offset.zero; // Separate offset for panning
   Offset _initialOffset = Offset.zero; // Store the initial offset
 
   void _removeMenu() {
@@ -232,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  blocListenerComponent(state, circleProvider) {
+  void blocListenerComponent(CircleState state, CircleProvider circleProvider) {
     if ((state is CircleUpdatedState) || (state is CircleInitialState)) {
       print("Circle updated");
     }
@@ -241,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget returnRootCircle(CircleProvider circleProvider) {
     return Transform(
       transform: Matrix4.identity()
-        ..translate(_offset.dx, _offset.dy)
+        ..translate(_offset.dx + _panOffset.dx, _offset.dy + _panOffset.dy)
         ..scale(_scale),
       child: CustomPaint(
         key: ValueKey('custom_paint_${DateTime.now().millisecondsSinceEpoch}'),
@@ -254,6 +255,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final circleProvider = Provider.of<CircleProvider>(context);
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.width;
 
     return BlocListener<CircleBloc, CircleState>(
       listener: (context, state) {
@@ -271,6 +274,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       setState(() {
                         _scale = details.scale;
                         _offset = details.focalPoint - details.localFocalPoint;
+                        debugPrint('Scale: $_scale, Offset: $_offset');
                       });
                     },
                     onTapUp: (details) {
@@ -289,8 +293,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () {
                       setState(() {
                         _scale = 1.0;
-                        _offset =
-                            _initialOffset; // Reset to the initial position
+                        _panOffset = Offset.zero;
+                        _offset = _initialOffset;
                       });
                     },
                     child: Icon(Icons.home),

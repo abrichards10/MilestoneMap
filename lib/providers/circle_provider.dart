@@ -1,4 +1,5 @@
 // lib/providers/circle_provider.dart
+
 import 'package:flutter/material.dart';
 import '../models/circle.dart';
 
@@ -35,7 +36,14 @@ class CircleProvider with ChangeNotifier {
   }
 
   void removeCircle(Circle parent, Circle circle) {
+    // If the circle being removed has children, move them to its parent
+    if (circle.children.isNotEmpty) {
+      parent.children.addAll(circle.children);
+    }
+
+    // Remove the circle from its parent's children list
     parent.children.remove(circle);
+
     notifyListeners();
   }
 }
