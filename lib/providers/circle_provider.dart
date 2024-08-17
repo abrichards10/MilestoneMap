@@ -14,6 +14,8 @@ class CircleProvider with ChangeNotifier {
 
   Circle get rootCircle => _rootCircle;
 
+  bool _placeLeft = true; // Flag to track placement direction
+
   void addCircle(Circle parent, Circle child) {
     final parentPosition = parent.offset;
     final int existingChildren = parent.children.length;
@@ -21,10 +23,18 @@ class CircleProvider with ChangeNotifier {
     // Calculate new position based on the number of existing children
     final double xOffset =
         existingChildren * (child.size + 20); // Adjust 20 for spacing
-    final Offset newPosition = Offset(
-      parentPosition.dx + xOffset, // Place new child slightly to the right
-      parentPosition.dy - 100, // Place above parent
-    );
+
+    final Offset newPosition = _placeLeft
+        ? Offset(parentPosition.dx - 100,
+            parentPosition.dy - xOffset) // Place to the left
+        : Offset(parentPosition.dx + 100,
+            parentPosition.dy - xOffset); // Place to the right
+
+    // Offset(
+    //   parentPosition.dx + xOffset, // Place new child slightly to the right
+    //   parentPosition.dy - 100, // Place above parent
+    // );
+    _placeLeft = !_placeLeft;
 
     child.offset = newPosition; // Update the child's position
 
