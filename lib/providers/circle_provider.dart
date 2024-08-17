@@ -16,17 +16,19 @@ class CircleProvider with ChangeNotifier {
 
   void addCircle(Circle parent, Circle child) {
     final parentPosition = parent.offset;
+    final int existingChildren = parent.children.length;
 
+    // Calculate new position based on the number of existing children
+    final double xOffset =
+        existingChildren * (child.size + 20); // Adjust 20 for spacing
     final Offset newPosition = Offset(
-      parentPosition.dx,
-      parentPosition.dy - 100, // Adjust position to place above parent
+      parentPosition.dx + xOffset, // Place new child slightly to the right
+      parentPosition.dy - 100, // Place above parent
     );
 
     child.offset = newPosition; // Update the child's position
 
-    // Add the new circle as a child of the parent
-    parent.children.add(child); // Ensure children list is mutable
-
+    parent.children.add(child); // Add the new circle as a child of the parent
     notifyListeners();
   }
 
