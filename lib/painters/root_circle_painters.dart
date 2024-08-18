@@ -18,7 +18,7 @@ class RootCirclePainter extends CustomPainter {
 
   void drawGoalCircle(Circle circle, Canvas canvas, Paint linePaint) {
     final offset = circle.offset;
-    final radius = circle.size / 2; // Use the circle's size property
+    final radius = circle.size / 2;
 
     // Draw lines to children
     for (var child in circle.children) {
@@ -34,9 +34,8 @@ class RootCirclePainter extends CustomPainter {
     // Draw the circle itself
     final paint = Paint()
       ..color = circle.isGoal
-          ? const Color.fromARGB(255, 67, 111, 70) // Root circle color
-          : const Color.fromARGB(
-              255, 100, 150, 100) // Task circle color (if needed)
+          ? const Color.fromARGB(255, 67, 111, 70)
+          : const Color.fromARGB(255, 100, 150, 100)
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(offset, radius, paint);
@@ -52,8 +51,7 @@ class RootCirclePainter extends CustomPainter {
       ),
       textAlign: TextAlign.center,
       textDirection: TextDirection.ltr,
-    )..layout(
-        maxWidth: radius * 2); // Adjust maxWidth based on the circle's size
+    )..layout(maxWidth: radius * 2);
 
     final textOffset = Offset(
       offset.dx - textPainter.width / 2,
@@ -65,6 +63,6 @@ class RootCirclePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+    return true;
   }
 }

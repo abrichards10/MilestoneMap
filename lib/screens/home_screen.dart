@@ -21,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Offset _offset = Offset.zero;
   Offset _panOffset = Offset.zero; // Separate offset for panning
   Offset _initialOffset = Offset.zero; // Store the initial offset
+  bool _dragging = false; // Initialize dragging variable
 
   void _removeMenu() {
     if (_overlayEntry != null) {
@@ -101,10 +102,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showMoveDialog(Circle circle) {
-    // Implement move dialog or drag-and-drop logic here
-  }
-
   void _showEditDialog(Circle circle, CircleProvider circleProvider) {
     final textController = TextEditingController(text: circle.text);
     showDialog(
@@ -178,9 +175,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 }),
                 _buildMenuItem('Remove Circle', () {
                   _showRemoveDialog(circle, circleProvider);
-                }),
-                _buildMenuItem('Move Circle', () {
-                  _showMoveDialog(circle);
                 }),
                 _buildMenuItem('Edit Circle', () {
                   _showEditDialog(circle, circleProvider);
@@ -270,12 +264,33 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Positioned.fill(
                   child: GestureDetector(
+                    onScaleStart: (details) {
+                      _handleTap(
+                        details.localFocalPoint / _scale - _offset,
+                        circleProvider,
+                      );
+
+                      if (_selectedCircle != null &&
+                          _selectedCircle != circleProvider.rootCircle) {
+                        _dragging = true;
+                      }
+                    },
                     onScaleUpdate: (details) {
                       setState(() {
                         _scale = details.scale;
-                        _offset = details.focalPoint - details.localFocalPoint;
-                        debugPrint('Scale: $_scale, Offset: $_offset');
+
+                        if (_dragging && _selectedCircle != null) {
+                          _selectedCircle!.offset +=
+                              details.focalPointDelta / _scale;
+                          circleProvider.notifyListeners();
+                        } else {
+                          _offset =
+                              details.focalPoint - details.localFocalPoint;
+                        }
                       });
+                    },
+                    onScaleEnd: (details) {
+                      _dragging = false;
                     },
                     onTapUp: (details) {
                       _handleTap(
