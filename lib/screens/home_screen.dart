@@ -32,32 +32,75 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showAddDialog(Circle parent, CircleProvider circleProvider) {
     final textController = TextEditingController();
+    final descriptionController = TextEditingController();
+    DateTime? selectedDate;
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text('Add Circle'),
-          content: TextField(
-            controller: textController,
-            decoration: InputDecoration(hintText: 'Enter circle text'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: textController,
+                decoration: InputDecoration(hintText: 'Title:'),
+              ),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(hintText: 'Description:'),
+              ),
+              SizedBox(height: 10),
+              Row(
+                children: [
+                  Text(selectedDate == null
+                      ? 'No Date Selected'
+                      : '${selectedDate!.month.toString().padLeft(2, '0')}/${selectedDate!.day.toString().padLeft(2, '0')}'),
+                  IconButton(
+                    icon: Icon(Icons.calendar_today),
+                    onPressed: () async {
+                      DateTime? pickedDate = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+
+                      setState(() {
+                        selectedDate = pickedDate;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () {
                 final text = textController.text;
+                final description = descriptionController.text;
                 if (text.isNotEmpty) {
                   final newCircle = Circle(
                     id: DateTime.now().toString(),
                     text: text,
+                    description: description, // Include description
+                    date: selectedDate != null
+                        ? "${selectedDate!.month.toString().padLeft(2, '0')}/${selectedDate!.day.toString().padLeft(2, '0')}"
+                        : null, // Include selected date
                     isGoal: false, // Task circle
                     offset: Offset(parent.offset.dx,
                         parent.offset.dy - 100), // Place above parent
-                    size: 50, // Smaller size for task circles
+                    size: circleProvider.rootCircle.size *
+                        .6, // Smaller size for task circles
                   );
 
                   circleProvider.addCircle(parent, newCircle);
                   Navigator.of(context).pop();
                   _removeMenu();
+                  // Show the information menu for the new circle
+                  _showInfoMenu(newCircle.offset, circleProvider);
                 }
               },
               child: Text('Add'),
@@ -139,6 +182,24 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _pickDate(Circle circle, CircleProvider circleProvider) async {
+    DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        // Format the date as MM/DD/YY
+        circle.date = "${pickedDate.month.toString().padLeft(2, '0')}/"
+            "${pickedDate.day.toString().padLeft(2, '0')}";
+        circleProvider.notifyListeners();
+      });
+    }
+  }
+
   Widget _buildMenuItem(String title, VoidCallback onTap) {
     return GestureDetector(
       onTap: () {
@@ -179,10 +240,41 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildMenuItem('Edit Circle', () {
                   _showEditDialog(circle, circleProvider);
                 }),
-                _buildMenuItem('Set Date', () {
-                  // Implement date functionality
-                  _removeMenu();
-                }),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context)!.insert(_overlayEntry!);
+  }
+
+  void _showInfoMenu(Offset position, CircleProvider circleProvider) {
+    _selectedCircle = null; // Reset selected circle
+
+    searchCircle(circleProvider.rootCircle, position);
+
+    if (_overlayEntry != null) {
+      _overlayEntry!.remove();
+    }
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        left: position.dx + 20,
+        top: position.dy,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: EdgeInsets.all(8),
+            color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Title: ${_selectedCircle?.text}'),
+                Text('Date: ${_selectedCircle?.date ?? 'No Date Set'}'),
+                Text(
+                    'Description: ${_selectedCircle?.description ?? 'No Date Set'}'),
               ],
             ),
           ),
@@ -297,6 +389,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         details.localPosition / _scale - _offset,
                         circleProvider,
                       );
+                    },
+                    onDoubleTapDown: (details) {
+                      // if (_selectedCircle!.offset != Null) {
+                      // print(_selectedCircle!.offset);
+                      _showInfoMenu(details.localPosition / _scale - _offset,
+                          circleProvider);
+                      // }
                     },
                     child: returnRootCircle(circleProvider),
                   ),

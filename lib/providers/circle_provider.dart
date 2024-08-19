@@ -11,7 +11,7 @@ class CircleProvider with ChangeNotifier {
     text: 'Main Goal',
     isGoal: true,
     offset: Offset(210, 500), // Adjust as needed
-    size: 100, // Root circle size
+    size: 150, // Root circle size
   );
 
   Circle get rootCircle => _rootCircle;

@@ -59,6 +59,27 @@ class RootCirclePainter extends CustomPainter {
     );
 
     textPainter.paint(canvas, textOffset);
+
+    // Draw the date
+    if (circle.date != null) {
+      final datePainter = TextPainter(
+        text: TextSpan(
+          text: circle.date,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: circle.size * 0.12,
+          ),
+        ),
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr,
+      );
+
+      datePainter.layout();
+      datePainter.paint(
+        canvas,
+        circle.offset - Offset(datePainter.width / 2, -textPainter.height / 2),
+      );
+    }
   }
 
   @override
