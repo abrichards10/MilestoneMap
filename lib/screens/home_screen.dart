@@ -1,3 +1,4 @@
+import 'package:easy_sidemenu/easy_sidemenu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:goals_app/bloc/circle_bloc.dart';
@@ -22,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Offset _panOffset = Offset.zero; // Separate offset for panning
   Offset _initialOffset = Offset.zero; // Store the initial offset
   bool _dragging = false; // Initialize dragging variable
+  SideMenuController sideMenu = SideMenuController();
 
   void _removeMenu() {
     if (_overlayEntry != null) {
@@ -354,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: Color.fromARGB(176, 165, 255, 166),
             body: Stack(
               children: [
-                Positioned.fill(
+                Positioned(
                   child: GestureDetector(
                     onScaleStart: (details) {
                       _handleTap(
@@ -398,6 +400,46 @@ class _HomeScreenState extends State<HomeScreen> {
                       // }
                     },
                     child: returnRootCircle(circleProvider),
+                  ),
+                ),
+                Positioned(
+                  top: 60,
+                  child: SideMenu(
+                    controller: sideMenu,
+                    style: SideMenuStyle(
+                      showTooltip: false,
+                      displayMode: SideMenuDisplayMode.auto,
+                      // showHamburger: true,
+                      hoverColor: Colors.blue[100],
+                      // selectedHoverColor: Colors.blue[100],
+                      // selectedColor: Colors.lightBlue,
+                      selectedTitleTextStyle:
+                          const TextStyle(color: Colors.white),
+                      selectedIconColor: Colors.white,
+                    ),
+                    items: [
+                      SideMenuExpansionItem(
+                        title: "Expansion Item",
+                        icon: const Icon(Icons.kitchen),
+                        children: [
+                          SideMenuItem(
+                            title: 'Expansion Item 1',
+                            onTap: (index, _) {
+                              sideMenu.changePage(index);
+                            },
+                            icon: const Icon(Icons.circle),
+                            tooltipContent: "Expansion Item 1",
+                          ),
+                          SideMenuItem(
+                            title: 'Expansion Item 2',
+                            onTap: (index, _) {
+                              sideMenu.changePage(index);
+                            },
+                            icon: const Icon(Icons.circle),
+                          )
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 Positioned(

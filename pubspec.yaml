@@ -39,6 +39,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   floating_draggable_widget: ^2.1.5
+  easy_sidemenu: ^0.6.0
 
 dev_dependencies:
   flutter_test:

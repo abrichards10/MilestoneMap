@@ -10,7 +10,7 @@ class CircleProvider with ChangeNotifier {
     id: 'root',
     text: 'Main Goal',
     isGoal: true,
-    offset: Offset(210, 500), // Adjust as needed
+    offset: Offset(210, 800), // Adjust as needed
     size: 150, // Root circle size
   );
 
@@ -30,9 +30,9 @@ class CircleProvider with ChangeNotifier {
 
     final Offset newPosition = _placeLeft
         ? Offset(parentPosition.dx - 100,
-            parentPosition.dy - xOffset) // Place to the left
+            parentPosition.dy + xOffset) // Place to the left
         : Offset(parentPosition.dx + 100,
-            parentPosition.dy - xOffset); // Place to the right
+            parentPosition.dy + xOffset); // Place to the right
 
     _placeLeft = !_placeLeft;
 
