@@ -129,9 +129,18 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                circleProvider.removeCircle(circleProvider.rootCircle, circle);
-                Navigator.of(context).pop();
-                _removeMenu();
+                // Find the parent circle and remove the selected circle
+                bool removed =
+                    _removeCircleFromParent(circleProvider.rootCircle, circle);
+
+                if (removed) {
+                  circleProvider.notifyListeners();
+                  Navigator.of(context).pop();
+                  _removeMenu();
+                } else {
+                  // Handle case where the circle was not found
+                  print('Circle not found in the parent\'s children list.');
+                }
               },
               child: Text('Remove'),
             ),
@@ -145,6 +154,19 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
+  }
+
+  bool _removeCircleFromParent(Circle parent, Circle target) {
+    if (parent.children.contains(target)) {
+      parent.children.remove(target);
+      return true;
+    } else {
+      for (var child in parent.children) {
+        bool removed = _removeCircleFromParent(child, target);
+        if (removed) return true;
+      }
+    }
+    return false;
   }
 
   void _showEditDialog(Circle circle, CircleProvider circleProvider) {
@@ -393,11 +415,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                     onDoubleTapDown: (details) {
-                      // if (_selectedCircle!.offset != Null) {
-                      // print(_selectedCircle!.offset);
                       _showInfoMenu(details.localPosition / _scale - _offset,
                           circleProvider);
-                      // }
                     },
                     child: returnRootCircle(circleProvider),
                   ),
@@ -453,7 +472,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         _offset = _initialOffset;
                       });
                     },
-                    child: Icon(Icons.home),
+                    child: Icon(
+                      Icons.circle,
+                      color: Color.fromARGB(255, 67, 111, 70),
+                    ),
                   ),
                 ),
               ],
