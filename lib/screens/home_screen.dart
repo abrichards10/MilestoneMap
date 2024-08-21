@@ -24,6 +24,24 @@ class _HomeScreenState extends State<HomeScreen> {
   Offset _initialOffset = Offset.zero; // Store the initial offset
   bool _dragging = false; // Initialize dragging variable
   SideMenuController sideMenu = SideMenuController();
+  ValueNotifier<List<SideMenuItem>> sideMenuItemsNotifier = ValueNotifier([]);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<CircleProvider>(context, listen: false)
+          .addListener(_updateSideMenuItems);
+    });
+  }
+
+  @override
+  void dispose() {
+    Provider.of<CircleProvider>(context, listen: false)
+        .removeListener(_updateSideMenuItems);
+    sideMenuItemsNotifier.dispose();
+    super.dispose();
+  }
 
   void _removeMenu() {
     if (_overlayEntry != null) {
@@ -362,6 +380,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _handleCircleMenuTap(Circle circle) {
+    // Handle circle menu item tap
+    // For example, you might want to show the circle's details
+    _showInfoMenu(
+        circle.offset, Provider.of<CircleProvider>(context, listen: false));
+  }
+
+  void _updateSideMenuItems() {
+    final circleProvider = Provider.of<CircleProvider>(context, listen: false);
+    final items = <SideMenuItem>[];
+
+    for (var circle in circleProvider.circles) {
+      items.add(SideMenuItem(
+        title: circle.text,
+        onTap: (index, _) {
+          _handleCircleMenuTap(circle);
+        },
+        icon: Icon(Icons.circle),
+        tooltipContent: circle.text,
+      ));
+    }
+
+    sideMenuItemsNotifier.value = items;
+  }
+
   @override
   Widget build(BuildContext context) {
     final circleProvider = Provider.of<CircleProvider>(context);
@@ -423,44 +466,73 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 Positioned(
                   top: 60,
-                  child: SideMenu(
-                    controller: sideMenu,
-                    style: SideMenuStyle(
-                      showTooltip: false,
-                      displayMode: SideMenuDisplayMode.auto,
-                      // showHamburger: true,
-                      hoverColor: Colors.blue[100],
-                      // selectedHoverColor: Colors.blue[100],
-                      // selectedColor: Colors.lightBlue,
-                      selectedTitleTextStyle:
-                          const TextStyle(color: Colors.white),
-                      selectedIconColor: Colors.white,
-                    ),
-                    items: [
-                      SideMenuExpansionItem(
-                        title: "Expansion Item",
-                        icon: const Icon(Icons.kitchen),
-                        children: [
-                          SideMenuItem(
-                            title: 'Expansion Item 1',
-                            onTap: (index, _) {
-                              sideMenu.changePage(index);
-                            },
-                            icon: const Icon(Icons.circle),
-                            tooltipContent: "Expansion Item 1",
-                          ),
-                          SideMenuItem(
-                            title: 'Expansion Item 2',
-                            onTap: (index, _) {
-                              sideMenu.changePage(index);
-                            },
-                            icon: const Icon(Icons.circle),
-                          )
-                        ],
-                      ),
-                    ],
+                  child: ValueListenableBuilder<List<SideMenuItem>>(
+                    valueListenable: sideMenuItemsNotifier,
+                    builder: (context, items, child) {
+                      // items.length += 1;
+                      // items[1] = SideMenuItem(
+                      //   title: "Main Goal",
+                      //   onTap: (index, _) {
+                      //     _handleCircleMenuTap(circleProvider.rootCircle);
+                      //   },
+                      //   icon: Icon(Icons.circle),
+                      //   tooltipContent: "Main Goal",
+                      // );
+                      return SideMenu(
+                        controller: sideMenu,
+                        style: SideMenuStyle(
+                          showTooltip: false,
+                          displayMode: SideMenuDisplayMode.auto,
+                          hoverColor: Colors.blue[100],
+                          selectedTitleTextStyle:
+                              const TextStyle(color: Colors.white),
+                          selectedIconColor: Colors.white,
+                        ),
+                        items: items,
+                      );
+                    },
                   ),
                 ),
+                // Positioned(
+                //   top: 60,
+                //   child: SideMenu(
+                //     controller: sideMenu,
+                //     style: SideMenuStyle(
+                //       showTooltip: false,
+                //       displayMode: SideMenuDisplayMode.auto,
+                //       // showHamburger: true,
+                //       hoverColor: Colors.blue[100],
+                //       // selectedHoverColor: Colors.blue[100],
+                //       // selectedColor: Colors.lightBlue,
+                //       selectedTitleTextStyle:
+                //           const TextStyle(color: Colors.white),
+                //       selectedIconColor: Colors.white,
+                //     ),
+                //     items: [
+                //       SideMenuExpansionItem(
+                //         title: "Expansion Item",
+                //         icon: const Icon(Icons.kitchen),
+                //         children: [
+                //           SideMenuItem(
+                //             title: 'Expansion Item 1',
+                //             onTap: (index, _) {
+                //               sideMenu.changePage(index);
+                //             },
+                //             icon: const Icon(Icons.circle),
+                //             tooltipContent: "Expansion Item 1",
+                //           ),
+                //           SideMenuItem(
+                //             title: 'Expansion Item 2',
+                //             onTap: (index, _) {
+                //               sideMenu.changePage(index);
+                //             },
+                //             icon: const Icon(Icons.circle),
+                //           )
+                //         ],
+                //       ),
+                //     ],
+                //   ),
+                // ),
                 Positioned(
                   bottom: 16,
                   right: 16,

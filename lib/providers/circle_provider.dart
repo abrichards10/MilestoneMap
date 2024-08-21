@@ -13,8 +13,10 @@ class CircleProvider with ChangeNotifier {
     offset: Offset(210, 800), // Adjust as needed
     size: 150, // Root circle size
   );
+  List<Circle> _circles = [];
 
   Circle get rootCircle => _rootCircle;
+  List<Circle> get circles => _circles;
 
   bool _placeLeft = true; // Flag to track placement direction
   final Random _random = Random();
@@ -39,6 +41,8 @@ class CircleProvider with ChangeNotifier {
     child.offset = newPosition; // Update the child's position
 
     parent.children.add(child); // Add the new circle as a child of the parent
+    _circles.add(child); // Add the new circle to the list
+
     notifyListeners();
   }
 
@@ -55,7 +59,7 @@ class CircleProvider with ChangeNotifier {
 
     // Remove the circle from its parent's children list
     parent.children.remove(circle);
-
+    _circles.remove(circle); // Remove the circle from the list
     notifyListeners();
   }
 }
